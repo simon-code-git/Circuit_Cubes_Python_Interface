@@ -1,4 +1,4 @@
-# Python-Circuit-Cubes-Interface
+# Circuit-Cubes-Python-Interface
 A beginner-friendly Python interface for controlling the Circuit Cubes Bluetooth Battery Cube via Bluetooth Low Energy (BLE). 
 
 # Usage 
