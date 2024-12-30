@@ -3,7 +3,9 @@ A beginner-friendly Python interface for controlling the Circuit Cubes Bluetooth
 
 # Usage 
 ## Dependencies
-## Connecting to Cicuit Cube
+In order for this project to work, three libraries are required: bleak, keyboard, and rich. 
+Install these to your Python environment with `$ pip install bleak`, `$ pip install keyboard`, and `$ pip install rich`. 
+## Connecting to Circuit Cube
 
 # Credits
 I would like to acknowledge the work of [blockninja124](https://github.com/blockninja124) and [asperka](https://github.com/asperka). 
