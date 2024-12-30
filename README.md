@@ -11,4 +11,4 @@ In order to find it, run the file `GetBluetoothAddress.py`. This program will on
 Then, make sure that you copy your Bluetooth address into line 240 of `CircuitCubePythonInterface.py`. 
 
 # Credits
-I would like to acknowledge the work of [blockninja124](https://github.com/blockninja124), [asperka](https://github.com/asperka), and [repkovsky](https://github.com/repkovsky). 
+I would like to acknowledge the work of [blockninja124](https://github.com/blockninja124).
