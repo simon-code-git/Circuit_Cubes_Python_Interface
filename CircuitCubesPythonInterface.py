@@ -62,7 +62,7 @@ def setup(): #Clear terminal, display program header, prompt user to choose prog
         Panel("[bold dodger_blue2]Python Control for Circuit Cubes Bluetooth Battery Cube by [italic]simon_code[/italic] [/bold dodger_blue2]", 
               style="bold white"))
     rich.print('[bold dodger_blue2]\n   Setting up: [/bold dodger_blue2]')
-    mode = input('      Type "n" for normal mode, "d" for debug mode. ')
+    mode = input('      Type "n" for normal mode, "d" for debug mode. \n')
     if mode not in ['n', 'd']: 
         rich.print('      [red]Invalid mode selected. [/red]')
         quit()
@@ -72,7 +72,20 @@ def setup(): #Clear terminal, display program header, prompt user to choose prog
     if mode == 'd':
         rich.print('      [underline]Debug[/underline] mode selected. ')
         mode = 'debug'
-    return mode
+    motorCode = input('      Select which two motor ports are being used. Type one of: "ab", "bc", "ca". \n')
+    if motorCode not in ['ab', 'bc', 'ca']: 
+        rich.print('      [red]Invalid motors selected. [/red]')
+        quit()
+    if motorCode == 'ab': 
+        motors = [0, 1]
+        rich.print('      Motors [underline]A+B[/underline] selected. ')
+    if motorCode == 'bc': 
+        motors = [1, 2]
+        rich.print('      Motors [underline]B+C[/underline] selected. ')
+    if motorCode == 'ca': 
+        motors = [2, 0]
+        rich.print('      Motors [underline]C+A[/underline] selected. ')
+    return mode, motors
 
 async def scanner(): #Scan for BLE (Bluetooth Low Energy) devices, identify Circuit Cube and return Bluetooth MAC address. 
     rich.print('[bold dodger_blue2]\n   Scanning for Bluetooth Battery Cube: [/bold dodger_blue2]')
@@ -134,6 +147,12 @@ async def readDeviceInformation(client): #Read some device information from know
         software = await client.read_gatt_char(constants(18))
         software = software.decode('utf-8')
         print(f'      Software: {software}. ')
+
+        tx = constants(2) 
+        rx = constants(3)
+        await client.write_gatt_char(tx, bytes('b', 'utf-8'))
+        voltage = await client.read_gatt_char(rx)
+        print(f'      Battery voltage: {voltage.decode("utf-8")}')
     except Exception as e: 
         rich.print(f'      [red not bold]{e}[/red not bold]')
         quit()
@@ -147,48 +166,63 @@ def motorCommand(motor, velocity): #Construct motor command as three digit strin
         motor = 2
     sign = '-' if velocity < 0 else '+'
     magnitude = abs(velocity)
+    if magnitude == 0: 
+        magnitude = 0
+    else: 
+        magnitude = 55+abs(velocity)
     commandString = f'{sign}{magnitude:03}{chr(ord('a') + motor)}'
     return commandString
 
-async def keyboardControlLoop(client): #Control motor velocities using arrow keys. 
+async def keyboardControlLoop(client, motors): #Control motor velocities using arrow keys. 
     rich.print('[bold dodger_blue2]\n   Starting keyboard motor control: [/bold dodger_blue2]')
+    if motors == [0, 1]: 
+        one = 'A' 
+        two = 'B'
+    if motors == [1, 2]: 
+        one = 'B'
+        two = 'C'
+    if motors == [2, 0]: 
+        one = 'C'
+        two = 'A'
+
     try: 
-        print('      Use up and down arrow keys to control motor A. ')
-        print('      Use left and right arrow keys to control motor B. ')
-        print('      Press escape key to end keyboard motor control. ')
+        print(f'      Use up and down arrow keys to control motor {one}. ')
+        print(f'      Use left and right arrow keys to control motor {two}. ')
+        print('      Press the space key to halt both motors. ')
+        print('      Press escape key to end keyboard motor control. \n')
         tx = constants(2)
-        velocity_A = velocity_B = 0
+        velocity_one = velocity_two = 0
         
-        with Live(f'      Motor A velocity: [bold green]{int(velocity_A/2.5)}%[/bold green]      Motor B velocity: [bold green]{int(velocity_B/2.5)}%[/bold green]') as live:
+        with Live(f'      Motor {one} velocity: [bold green]{int(velocity_one/2)}%[/bold green]      Motor {two} velocity: [bold green]{int(velocity_two/2)}%[/bold green]') as live:
             while True: 
                 if keyboard.is_pressed('up'): 
-                    velocity_A -= 25
+                    velocity_one -= 20
                 if keyboard.is_pressed('down'): 
-                    velocity_A += 25
+                    velocity_one += 20
                 if keyboard.is_pressed('esc'):
                     break
-                if velocity_A < -250: 
-                    velocity_A = -250
-                if velocity_A > 250: 
-                    velocity_A = 250
-                await client.write_gatt_char(tx, motorCommand('A', velocity_A).encode())
+                if velocity_one < -200: 
+                    velocity_one = -200
+                if velocity_one > 200: 
+                    velocity_one = 200
+                await client.write_gatt_char(tx, motorCommand(one, velocity_one).encode())
                 
                 if keyboard.is_pressed('left'): 
-                    velocity_B -= 25
+                    velocity_two -= 20
                 if keyboard.is_pressed('right'): 
-                    velocity_B += 25
+                    velocity_two += 20
                 if keyboard.is_pressed('esc'):
                     break
-                if velocity_B < -250: 
-                    velocity_B = -250
-                if velocity_B > 250: 
-                    velocity_B = 250
-                await client.write_gatt_char(tx, motorCommand('B', velocity_B).encode())
+                if velocity_two < -200: 
+                    velocity_two = -200
+                if velocity_two > 200: 
+                    velocity_two = 200
+                await client.write_gatt_char(tx, motorCommand(two, velocity_two).encode())
 
                 if keyboard.is_pressed('space'): 
-                    velocity_A = velocity_B = 0 
+                    velocity_one = velocity_two = 0 
 
-                live.update(f'      Motor A velocity: [bold green]{int(velocity_A/2.5)}%[/bold green]      Motor B velocity: [bold green]{int(velocity_B/2.5)}%[/bold green]')
+                live.update(f'      Motor {one} velocity: [bold green]{int(velocity_one/2)}%[/bold green]      Motor {two} velocity: [bold green]{int(velocity_two/2)}%[/bold green]')
                 await asyncio.sleep(0.05)
 
     except Exception as e: 
@@ -235,11 +269,11 @@ async def disconnectCube(client): #Halt all motors and properly disconnect Circu
         quit()
 
 async def main(): 
-    mode = setup()
+    mode, motors = setup()
     if mode == 'normal': 
         address = 'FC:58:FA:CF:64:4D' #THIS BLUETOOTH ADDRESS MUST BE CHANGED, IT IS UNIQUE TO EACH CUBE! 
         client = await connectCube(address)
-        await keyboardControlLoop(client)
+        await keyboardControlLoop(client, motors)
         await disconnectCube(client)
     if mode == 'debug': 
         address = await scanner()
@@ -247,7 +281,7 @@ async def main():
         await readDeviceInformation(client)
         await discoverDeviceUUIDs(client)
         await readDescriptors(client)
-        await keyboardControlLoop(client)
+        await keyboardControlLoop(client, motors)
         await disconnectCube(client) 
 
 asyncio.run(main())
