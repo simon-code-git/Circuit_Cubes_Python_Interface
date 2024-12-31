@@ -8,7 +8,7 @@ Install these to your Python environment with `$ pip install bleak`, `$ pip inst
 ## Connecting to Circuit Cube
 Each Circuit Cube has a unique Bluetooth hardware address.  
 In order to find it, run the file `GetBluetoothAddress.py`. This program will only work as expected if your Circuit Cube is named "Tenka".  
-Then, make sure that you copy your Bluetooth address into line 240 of `CircuitCubesPythonInterface.py`. 
+Then, make sure that you copy your Bluetooth address into **line 274** of `CircuitCubesPythonInterface.py`. 
 
 # Credits
 I would like to acknowledge the work of [blockninja124](https://github.com/blockninja124).
