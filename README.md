@@ -4,7 +4,7 @@ An easy-to-use Python interface for controlling the Circuit Cubes Bluetooth Batt
 # Usage 
 ## Dependencies
 In order for this project to work, three packages are required: bleak, keyboard, and rich.  
-Install these to your Python environment with `$ pip install bleak`, `$ pip install keyboard`, and `$ pip install rich`. 
+Install these to your Python environment with `$ pip install bleak`, `$ pip install keyboard`, and `$ pip install rich`.  
 Additionally, the battery characterization code requires matplotlib and numpy. 
 ## Connecting to Circuit Cube
 Each Circuit Cube has a unique Bluetooth hardware address.  
